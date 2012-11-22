@@ -1,4 +1,3 @@
 gerrit-gitorious-replication
 ============================
 
-dddd
