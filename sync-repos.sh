@@ -32,8 +32,8 @@ GERRIT_USER="gerrit"
 # 3. Gitorious server FQDN
 GITORIOUS="gitorious.example.org"
 
-# 4. Gitorious user; needs an SSH key, rights to run MySQL commands without
-# password and rights to run the ${CREATE_REPOS} script
+# 4. An account on the Gitorious server; needs an SSH key, rights to run MySQL
+# commands without a password and rights to run the ${CREATE_REPOS} script
 GITORIOUS_USER="gitorious"
 
 # 5. the location of the script that creates the repositories on the
