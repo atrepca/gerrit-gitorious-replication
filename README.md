@@ -9,6 +9,6 @@ When replicating Git repositories from [Gerrit](http://code.google.com/p/gerrit/
 
 ## Configuration
 
-1. `sync-repos.sh` - 5 variables need to be set: the Gerrit server and a Gerrit user, the Gitorious server and a user account, and the location of `create-gitorious-repos.rb`.
+1. `sync-repos.sh` - 6 variables need to be set: the Gerrit server and a Gerrit user, the Gitorious server and a user account, the Gitorious MySQL database, and the location of `create-gitorious-repos.rb`.
 2. `sync-repos.cron` - Set the location of `sync-repos.sh` and the user it will run as.
 3. `create-gitorious-repos.rb` - 2 variables need setting: the Gitorious project repositories will be created into and the path to `environment.rb`.

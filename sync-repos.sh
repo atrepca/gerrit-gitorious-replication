@@ -10,7 +10,7 @@
 #
 # The script runs from a location external to both ${GERRIT} and ${GITORIOUS}.
 #
-# CONFIGURATION: set the variables below, points 1 to 5.
+# CONFIGURATION: set the variables below, points 1 to 6.
 
 # -----------------------------------------------------------------------------
 # exit on error
@@ -32,11 +32,16 @@ GERRIT_USER="gerrit"
 # 3. Gitorious server FQDN
 GITORIOUS="gitorious.example.org"
 
-# 4. An account on the Gitorious server; needs an SSH key, rights to run MySQL
-# commands without a password and rights to run the ${CREATE_REPOS} script
+# 4. An account on the Gitorious server; needs an SSH key, needs to be able to
+# run MySQL commands without a password (through ~/.my.cnf) and MySQL select
+# rights on the ${GITORIOUS_DB}; also needs rights to run the ${CREATE_REPOS}
+# script as root
 GITORIOUS_USER="gitorious"
 
-# 5. the location of the script that creates the repositories on the
+# 5. The Gitorious MySQL Production database
+GITORIOUS_DB="gitorious_production"
+
+# 6. the location of the script that creates the repositories on the
 # ${GITORIOUS} server
 CREATE_REPOS="/opt/scripts/create_gitorious_repos.rb"
 
@@ -47,12 +52,12 @@ trap "/bin/rm -rf ${DIFF_DIR}" EXIT
 
 # -----------------------------------------------------------------------------
 # get the sorted list of Gerrit projects and convert them to lowercase
-/usr/bin/ssh -p 2222 ${GERRIT_USER}@${GERRIT} gerrit ls-projects --type ALL | /bin/sort > ${DIFF_DIR}/repos_gerrit
-/bin/cat ${DIFF_DIR}/repos_gerrit | /usr/bin/tr '[A-Z]' '[a-z]' > ${DIFF_DIR}/repos_gerrit_lowercase
+/usr/bin/ssh -p 2222 ${GERRIT_USER}@${GERRIT} gerrit ls-projects --type ALL > ${DIFF_DIR}/repos_gerrit
+/bin/cat ${DIFF_DIR}/repos_gerrit | /usr/bin/tr '[A-Z]' '[a-z]' | /bin/sort > ${DIFF_DIR}/repos_gerrit_lowercase
 
 # -----------------------------------------------------------------------------
 # get the sorted list of Gitorious repositories
-/usr/bin/ssh ${GITORIOUS_USER}@${GITORIOUS} 'mysql --skip-column-names -B -u git gitorious -e "SELECT name FROM repositories"' | /bin/sort > ${DIFF_DIR}/repos_gitorious
+/usr/bin/ssh ${GITORIOUS_USER}@${GITORIOUS} 'mysql --skip-column-names -B -u ${GITORIOUS_USER} ${GITORIOUS_DB} -e "SELECT name FROM repositories"' | /bin/sort > ${DIFF_DIR}/repos_gitorious
 
 # -----------------------------------------------------------------------------
 # compare the two resulting files; we're interested only in lines unique to FILE1
@@ -70,7 +75,7 @@ if [ "${MISSING_REPOS}" ]; then
 
     # also trigger the replication for the newly created repositories
     for i in ${MISSING_REPOS}; do
-        /bin/grep $i ${DIFF_DIR}/repos_gerrit >> ${DIFF_DIR}/repos_missing
+        /bin/grep -i $i ${DIFF_DIR}/repos_gerrit >> ${DIFF_DIR}/repos_missing
     done
     /usr/bin/ssh -p 2222 ${GERRIT_USER}@${GERRIT} gerrit replicate `/bin/cat ${DIFF_DIR}/repos_missing`
 fi
