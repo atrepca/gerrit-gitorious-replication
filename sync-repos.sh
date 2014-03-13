@@ -47,7 +47,7 @@ CREATE_REPOS="/opt/scripts/create_gitorious_repos.rb"
 
 # a temporary directory where the diff files will be created; will be cleaned
 # up on exit
-DIFF_DIR=`/bin/mktemp -d /tmp/tmp.XXXXXXXXXX`
+DIFF_DIR=$(/bin/mktemp -d /tmp/tmp.XXXXXXXXXX)
 trap "/bin/rm -rf ${DIFF_DIR}" EXIT
 
 # -----------------------------------------------------------------------------
@@ -61,7 +61,7 @@ trap "/bin/rm -rf ${DIFF_DIR}" EXIT
 
 # -----------------------------------------------------------------------------
 # compare the two resulting files; we're interested only in lines unique to FILE1
-MISSING_REPOS=`/usr/bin/comm -23 ${DIFF_DIR}/repos_gerrit_lowercase ${DIFF_DIR}/repos_gitorious`
+MISSING_REPOS=$(/usr/bin/comm -23 ${DIFF_DIR}/repos_gerrit_lowercase ${DIFF_DIR}/repos_gitorious)
 
 # -----------------------------------------------------------------------------
 # if the comparison resulted in a file then we have Gitorious repositories to create
@@ -70,12 +70,12 @@ if [ "${MISSING_REPOS}" ]; then
 
     # suppressed output earlier so that we can throw it nicely here, for logging purposes
     if [ "$?" -eq "0" ]; then
-        /bin/echo -e "\n`/bin/date -Is` :: The following repositories have been created in Gitorious:\n${MISSING_REPOS}"
+        /bin/echo -e "\n$(/bin/date -Is) :: The following repositories have been created in Gitorious:\n${MISSING_REPOS}"
     fi
 
     # also trigger the replication for the newly created repositories
     for i in ${MISSING_REPOS}; do
         /bin/grep -i $i ${DIFF_DIR}/repos_gerrit >> ${DIFF_DIR}/repos_missing
     done
-    /usr/bin/ssh -p 2222 ${GERRIT_USER}@${GERRIT} gerrit replicate `/bin/cat ${DIFF_DIR}/repos_missing`
+    /usr/bin/ssh -p 2222 ${GERRIT_USER}@${GERRIT} gerrit replicate $(/bin/cat ${DIFF_DIR}/repos_missing)
 fi
